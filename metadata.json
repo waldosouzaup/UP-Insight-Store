@@ -1,0 +1,5 @@
+{
+  "name": "UP InsightStore",
+  "description": "Retail analytics dashboard powered by Gemini AI, connecting sales, inventory, and product data to provide actionable insights for physical stores.",
+  "requestFramePermissions": []
+}
