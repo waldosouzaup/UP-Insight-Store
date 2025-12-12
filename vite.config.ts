@@ -3,15 +3,16 @@ import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // Load env file based on `mode` in the current working directory.
-  // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
-  const env = loadEnv(mode, (process as any).cwd(), '');
+  // Carrega variáveis de ambiente baseadas no modo atual (development/production)
+  // O terceiro parâmetro '' garante que carregue todas as variáveis, não apenas as com prefixo VITE_
+  const env = loadEnv(mode, process.cwd(), '');
 
   return {
     plugins: [react()],
     define: {
-      // Polyfill process.env.API_KEY for the Gemini SDK usage
-      'process.env.API_KEY': JSON.stringify(env.API_KEY)
+      // Polyfill seguro para process.env.API_KEY usado pelo SDK do Gemini
+      // Garante uma string vazia caso a chave não esteja definida para evitar crash na inicialização
+      'process.env.API_KEY': JSON.stringify(env.API_KEY || '')
     }
   };
 });
