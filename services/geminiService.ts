@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { StoreData } from "../types";
+import { StoreData, ChatMessage } from "../types";
 
 // Initialize Gemini Client
 // In a real app, ensure process.env.API_KEY is defined in your build environment.
@@ -11,7 +11,7 @@ const MODEL_NAME = 'gemini-2.5-flash';
 export const generateStoreInsight = async (
   userPrompt: string, 
   contextData: StoreData,
-  chatHistory: string[] = []
+  chatHistory: ChatMessage[] = []
 ): Promise<string> => {
   
   if (!apiKey) {
@@ -52,11 +52,17 @@ export const generateStoreInsight = async (
     7. Identifique produtos com estoque baixo (abaixo do nível mínimo).
   `;
 
+  // Format history correctly for the API
+  const historyParts = chatHistory.map(msg => ({
+    role: msg.role === 'model' ? 'model' : 'user',
+    parts: [{ text: msg.text }]
+  }));
+
   try {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
       contents: [
-        ...chatHistory.map(text => ({ role: 'user', parts: [{ text }] })), // Simplified history for this demo
+        ...historyParts,
         { role: 'user', parts: [{ text: userPrompt }] }
       ],
       config: {

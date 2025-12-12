@@ -20,6 +20,8 @@ const KPICard = ({ title, value, prevValue, type = 'currency', icon: Icon, accen
   let percentChange = 0;
   if (prevValue > 0) {
     percentChange = ((value - prevValue) / prevValue) * 100;
+  } else if (value > 0 && prevValue === 0) {
+      percentChange = 100; // Growth from zero
   }
   
   const isPositive = percentChange >= 0;
@@ -257,7 +259,10 @@ const DashboardView: React.FC<DashboardViewProps> = ({ data }) => {
             <div>
                 <p className="text-sm font-medium mb-1" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Horário de Pico</p>
                 <h3 className="text-2xl font-bold text-white">
-                    {hourlyData.reduce((prev, current) => (prev.count > current.count) ? prev : current).hour}
+                    {hourlyData.length > 0 
+                        ? hourlyData.reduce((prev, current) => (prev.count > current.count) ? prev : current).hour
+                        : 'N/A'
+                    }
                 </h3>
                 <p className="text-xs mt-2" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
                    Baseado no fluxo mensal
@@ -304,6 +309,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ data }) => {
                 <YAxis stroke="#94a3b8" tick={{fontSize: 12}} tickFormatter={(val) => `R$${val/1000}k`} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#002D39', borderRadius: '8px', border: '1px solid #49FFBD', color: '#fff' }}
+                  labelStyle={{ color: '#49FFBD', fontWeight: 'bold' }}
                   formatter={(value: number) => [`R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 'Faturamento']}
                 />
                 <Area type="monotone" dataKey="revenue" stroke="#49FFBD" fillOpacity={1} fill="url(#colorRev)" />
@@ -335,6 +341,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ data }) => {
                 </Pie>
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#002D39', borderRadius: '8px', border: '1px solid #49FFBD', color: '#fff' }}
+                  labelStyle={{ color: '#49FFBD', fontWeight: 'bold' }}
                   formatter={(value: number) => `R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`} 
                 />
                 <Legend verticalAlign="bottom" height={36} iconType="circle" formatter={(value) => <span className="text-slate-300 text-xs">{value}</span>}/>
@@ -363,6 +370,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ data }) => {
                         <Tooltip 
                             cursor={{fill: 'rgba(255,255,255,0.05)'}}
                             contentStyle={{ backgroundColor: '#002D39', borderRadius: '8px', border: '1px solid #49FFBD', color: '#fff' }}
+                            labelStyle={{ color: '#49FFBD', fontWeight: 'bold' }}
                             formatter={(value: number) => `R$ ${value.toLocaleString('pt-BR')}`}
                         />
                         <Bar dataKey="revenue" fill="#49C6FF" radius={[4, 4, 0, 0]} />
@@ -384,6 +392,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ data }) => {
                         <YAxis stroke="#94a3b8" tick={{fontSize: 12}} />
                         <Tooltip 
                             contentStyle={{ backgroundColor: '#002D39', borderRadius: '8px', border: '1px solid #49FFBD', color: '#fff' }}
+                            labelStyle={{ color: '#49FFBD', fontWeight: 'bold' }}
                             formatter={(value: number) => [`${value} vendas`, 'Volume']}
                         />
                         <Area type="step" dataKey="count" stroke="#FFB849" fill="#FFB849" fillOpacity={0.2} strokeWidth={2} />
@@ -406,6 +415,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ data }) => {
                     <Tooltip 
                         cursor={{fill: 'rgba(255,255,255,0.05)'}}
                         contentStyle={{ backgroundColor: '#002D39', borderRadius: '8px', border: '1px solid #49FFBD', color: '#fff' }}
+                        labelStyle={{ color: '#49FFBD', fontWeight: 'bold' }}
                         formatter={(value: number) => `R$ ${value.toLocaleString('pt-BR')}`}
                     />
                     <Bar dataKey="revenue" fill="#BD49FF" radius={[0, 4, 4, 0]}>

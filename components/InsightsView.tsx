@@ -43,11 +43,11 @@ const InsightsView: React.FC<InsightsViewProps> = ({ data }) => {
     setInputValue('');
     setIsLoading(true);
 
-    // Call Gemini Service
+    // Call Gemini Service with full history objects
     const aiResponseText = await generateStoreInsight(
       userMsg.text, 
       data, 
-      messages.map(m => m.text) // Pass context history
+      messages // Pass full ChatMessage objects
     );
 
     const botMsg: ChatMessage = {
