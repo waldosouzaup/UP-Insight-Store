@@ -2,8 +2,8 @@ import { GoogleGenAI } from "@google/genai";
 import { StoreData, ChatMessage } from "../types";
 
 // Initialize Gemini Client
-// The API Key is injected via vite.config.ts define: process.env.API_KEY
-const apiKey = process.env.API_KEY || '';
+// Safe access to env vars to prevent runtime crashes
+const apiKey = (import.meta.env && import.meta.env.VITE_GOOGLE_GENAI_API_KEY) || 'dummy-key';
 
 // We only instantiate the client if we have a key, or we let the call fail gracefully later
 const ai = new GoogleGenAI({ apiKey });
@@ -16,9 +16,9 @@ export const generateStoreInsight = async (
   chatHistory: ChatMessage[] = []
 ): Promise<string> => {
   
-  if (!apiKey) {
+  if (!apiKey || apiKey === 'dummy-key') {
     console.error("API Key missing");
-    return "Erro de Configuração: API Key do Gemini não encontrada. Verifique suas variáveis de ambiente.";
+    return "Erro de Configuração: API Key do Gemini não encontrada ou inválida. Verifique suas variáveis de ambiente (VITE_GOOGLE_GENAI_API_KEY).";
   }
 
   // Optimize context: Flatten data to minimize token usage while keeping relevance
