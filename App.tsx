@@ -5,6 +5,7 @@ import InsightsView from './components/InsightsView';
 import InventoryView from './components/InventoryView';
 import LoginView from './components/LoginView';
 import UploadView from './components/UploadView';
+import SettingsView from './components/SettingsView';
 import { ViewState, StoreData } from './types';
 import { supabase } from './services/supabaseClient';
 import { fetchRealStoreData, signOut } from './services/supabaseService';
@@ -15,12 +16,16 @@ const App: React.FC = () => {
   const [data, setData] = useState<StoreData | null>(null);
   const [currentView, setView] = useState<ViewState>(ViewState.DASHBOARD);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // User Info for Welcome Message
+  const [userName, setUserName] = useState('');
 
   // Initialize Session
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setIsAuthenticated(true);
+        setUserName(session.user.user_metadata?.full_name || '');
         loadUserData();
       } else {
         setIsLoading(false);
@@ -32,9 +37,11 @@ const App: React.FC = () => {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
       if (session) {
+         setUserName(session.user.user_metadata?.full_name || '');
          loadUserData();
       } else {
          setData(null);
+         setUserName('');
       }
     });
 
@@ -64,6 +71,7 @@ const App: React.FC = () => {
     signOut();
     setIsAuthenticated(false);
     setData(null);
+    setUserName('');
     setView(ViewState.DASHBOARD);
   };
 
@@ -76,6 +84,10 @@ const App: React.FC = () => {
     // In a real app, we might want a different UI for this, but reusing UploadView is fine.
     setData(null);
     setView(ViewState.DASHBOARD);
+  };
+  
+  const handleUserUpdate = (newName: string) => {
+    setUserName(newName);
   };
 
   if (isLoading) {
@@ -100,13 +112,15 @@ const App: React.FC = () => {
   const renderContent = () => {
     switch (currentView) {
       case ViewState.DASHBOARD:
-        return <DashboardView data={data} />;
+        return <DashboardView data={data} userName={userName} />;
       case ViewState.INSIGHTS:
         return <InsightsView data={data} />;
       case ViewState.INVENTORY:
         return <InventoryView data={data} />;
+      case ViewState.SETTINGS:
+        return <SettingsView onUpdateUser={handleUserUpdate} />;
       default:
-        return <DashboardView data={data} />;
+        return <DashboardView data={data} userName={userName} />;
     }
   };
 

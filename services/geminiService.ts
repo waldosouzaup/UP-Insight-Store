@@ -2,8 +2,11 @@ import { GoogleGenAI } from "@google/genai";
 import { StoreData, ChatMessage } from "../types";
 
 // Initialize Gemini Client
-// In a real app, ensure process.env.API_KEY is defined in your build environment.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// The API Key is injected via vite.config.ts define: process.env.API_KEY
+const apiKey = process.env.API_KEY || '';
+
+// We only instantiate the client if we have a key, or we let the call fail gracefully later
+const ai = new GoogleGenAI({ apiKey });
 
 const MODEL_NAME = 'gemini-2.5-flash';
 
@@ -13,8 +16,9 @@ export const generateStoreInsight = async (
   chatHistory: ChatMessage[] = []
 ): Promise<string> => {
   
-  if (!process.env.API_KEY) {
-    return "Erro de Configuração: API Key do Gemini não encontrada. Por favor, configure `process.env.API_KEY`.";
+  if (!apiKey) {
+    console.error("API Key missing");
+    return "Erro de Configuração: API Key do Gemini não encontrada. Verifique suas variáveis de ambiente.";
   }
 
   // Optimize context: Flatten data to minimize token usage while keeping relevance
@@ -73,6 +77,6 @@ export const generateStoreInsight = async (
     return response.text || "Não consegui gerar uma análise no momento.";
   } catch (error) {
     console.error("Gemini Error:", error);
-    return "Desculpe, ocorreu um erro ao conectar com o módulo de inteligência.";
+    return "Desculpe, ocorreu um erro ao conectar com o módulo de inteligência. Verifique sua conexão ou a validade da chave de API.";
   }
 };

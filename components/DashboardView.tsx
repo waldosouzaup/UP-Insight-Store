@@ -9,6 +9,7 @@ import { StoreData } from '../types';
 
 interface DashboardViewProps {
   data: StoreData;
+  userName?: string;
 }
 
 // Color Palette
@@ -57,7 +58,7 @@ const KPICard = ({ title, value, prevValue, type = 'currency', icon: Icon, accen
   );
 };
 
-const DashboardView: React.FC<DashboardViewProps> = ({ data }) => {
+const DashboardView: React.FC<DashboardViewProps> = ({ data, userName }) => {
   // State for Custom Date Range in Trend Chart
   const [dateRange, setDateRange] = useState<{start: string, end: string}>({ start: '', end: '' });
 
@@ -214,7 +215,9 @@ const DashboardView: React.FC<DashboardViewProps> = ({ data }) => {
     <div className="space-y-6">
       <div className="flex justify-between items-end">
         <div>
-          <h2 className="text-2xl font-bold text-white">Dashboard Analítico</h2>
+          <h2 className="text-3xl font-bold text-white mb-1">
+             Seja bem vindo, <span className="text-[#49FFBD]">{userName || 'Visitante'}</span>
+          </h2>
           <p className="text-slate-400">
              Visão consolidada de {contextData.latestDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
           </p>

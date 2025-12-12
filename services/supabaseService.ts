@@ -1,6 +1,34 @@
 import { supabase } from './supabaseClient';
 import { StoreData, Product, InventoryItem, Sale } from '../types';
 
+// --- USER MANAGEMENT ---
+
+export const updateUserProfile = async (updates: { fullName?: string; phone?: string }) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Usuário não autenticado');
+
+  const { data, error } = await supabase.auth.updateUser({
+    data: {
+      full_name: updates.fullName,
+      phone: updates.phone,
+    }
+  });
+
+  if (error) throw error;
+  return data;
+};
+
+export const updateUserCredentials = async (updates: { email?: string; password?: string }) => {
+  const attributes: any = {};
+  if (updates.email) attributes.email = updates.email;
+  if (updates.password) attributes.password = updates.password;
+
+  const { data, error } = await supabase.auth.updateUser(attributes);
+
+  if (error) throw error;
+  return data;
+};
+
 // --- FETCH DATA ---
 
 export const fetchRealStoreData = async (): Promise<StoreData | null> => {
@@ -31,6 +59,7 @@ export const fetchRealStoreData = async (): Promise<StoreData | null> => {
   if (salesError) throw salesError;
 
   // Map DB snake_case to App camelCase
+  // Note: IDs will contain the user prefix (e.g., "user123_prodABC"), which is fine for internal linking
   const products: Product[] = (productsData || []).map((p: any) => ({
     id: p.id,
     name: p.name,
@@ -61,16 +90,34 @@ export const fetchRealStoreData = async (): Promise<StoreData | null> => {
 
 // --- UPLOAD DATA ---
 
-export const uploadStoreDataToDB = async (data: StoreData) => {
+export const uploadStoreDataToDB = async (data: StoreData, mode: 'append' | 'replace' = 'append') => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Usuário não autenticado');
 
   const userId = user.id;
 
+  // If mode is 'replace', delete all existing data for this user first
+  if (mode === 'replace') {
+    // Delete in order to respect foreign keys (Children first)
+    const { error: delSales } = await supabase.from('sales').delete().eq('user_id', userId);
+    if (delSales) throw new Error(`Erro ao limpar vendas: ${delSales.message}`);
+
+    const { error: delInv } = await supabase.from('inventory').delete().eq('user_id', userId);
+    if (delInv) throw new Error(`Erro ao limpar estoque: ${delInv.message}`);
+
+    const { error: delProd } = await supabase.from('products').delete().eq('user_id', userId);
+    if (delProd) throw new Error(`Erro ao limpar produtos: ${delProd.message}`);
+  }
+
+  // HELPER: Namespace IDs to ensure uniqueness per user in the shared DB
+  // This prevents "Row-level security policy violation" when upserting IDs 
+  // that might exist for other users.
+  const makeUniqueId = (rawId: string) => `${userId}_${rawId}`;
+
   // 1. Prepare Products
   // Upsert allows updating existing products if ID matches
   const productsPayload = data.products.map(p => ({
-    id: p.id,
+    id: makeUniqueId(p.id), // Prefix ID
     user_id: userId,
     name: p.name,
     category: p.category,
@@ -81,19 +128,18 @@ export const uploadStoreDataToDB = async (data: StoreData) => {
 
   const { error: prodError } = await supabase
     .from('products')
-    .upsert(productsPayload, { onConflict: 'id' }); // Assuming ID is unique per file
+    .upsert(productsPayload, { onConflict: 'id' }); 
   
   if (prodError) throw new Error(`Erro ao salvar produtos: ${prodError.message}`);
 
   // 2. Prepare Inventory
   const inventoryPayload = data.inventory.map(i => ({
     user_id: userId,
-    product_id: i.productId,
+    product_id: makeUniqueId(i.productId), // Use prefixed ID
     quantity: i.quantity,
     last_updated: new Date().toISOString()
   }));
 
-  // We delete existing inventory for these products to ensure clean state or use upsert
   const { error: invError } = await supabase
     .from('inventory')
     .upsert(inventoryPayload, { onConflict: 'user_id,product_id' });
@@ -101,12 +147,9 @@ export const uploadStoreDataToDB = async (data: StoreData) => {
   if (invError) throw new Error(`Erro ao salvar estoque: ${invError.message}`);
 
   // 3. Prepare Sales
-  // For sales, we usually append. In this demo, we'll insert them.
-  // Note: If re-uploading the same sheet, this might duplicate sales unless we track external_id.
-  // For simplicity, we just insert.
   const salesPayload = data.sales.map(s => ({
     user_id: userId,
-    product_id: s.productId,
+    product_id: makeUniqueId(s.productId), // Use prefixed ID
     quantity: s.quantity,
     total: s.total,
     date: s.date

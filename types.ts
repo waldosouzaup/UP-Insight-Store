@@ -30,7 +30,8 @@ export interface StoreData {
 export enum ViewState {
   DASHBOARD = 'DASHBOARD',
   INSIGHTS = 'INSIGHTS',
-  INVENTORY = 'INVENTORY'
+  INVENTORY = 'INVENTORY',
+  SETTINGS = 'SETTINGS'
 }
 
 export interface ChatMessage {

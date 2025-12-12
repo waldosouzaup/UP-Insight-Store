@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { LayoutDashboard, MessageSquareText, PackageSearch, Store, Menu, X, LogOut, Upload } from 'lucide-react';
+import { LayoutDashboard, MessageSquareText, PackageSearch, Store, Menu, X, LogOut, Upload, Settings } from 'lucide-react';
 import { ViewState } from '../types';
 
 interface LayoutProps {
@@ -50,6 +50,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentView, setView, onLogou
           <NavItem view={ViewState.INVENTORY} icon={PackageSearch} label="Estoque & Alertas" />
           
           <div className="mt-8 pt-8 border-t border-white/10">
+             <NavItem view={ViewState.SETTINGS} icon={Settings} label="Configurações" />
              <button
                onClick={onUploadNew}
                className="flex items-center w-full px-4 py-3 mb-2 text-slate-300 hover:bg-white/5 hover:text-white rounded-lg transition-colors"
@@ -69,7 +70,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentView, setView, onLogou
                 Sair do sistema
             </button>
             <div className="mt-4 text-xs text-slate-500 text-center">
-                v1.2.0 • Powered by Gemini
+                v1.3.0 • Powered by Gemini
             </div>
         </div>
       </aside>
@@ -93,6 +94,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentView, setView, onLogou
             <NavItem view={ViewState.INSIGHTS} icon={MessageSquareText} label="Analista IA" />
             <NavItem view={ViewState.INVENTORY} icon={PackageSearch} label="Estoque" />
             <div className="border-t border-white/10 mt-4 pt-4">
+                 <NavItem view={ViewState.SETTINGS} icon={Settings} label="Configurações" />
                  <button onClick={onUploadNew} className="flex items-center w-full py-3 text-slate-300">
                     <Upload className="w-5 h-5 mr-3" /> Novo Upload
                  </button>
