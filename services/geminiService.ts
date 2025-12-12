@@ -3,8 +3,7 @@ import { StoreData, ChatMessage } from "../types";
 
 // Initialize Gemini Client
 // In a real app, ensure process.env.API_KEY is defined in your build environment.
-const apiKey = process.env.API_KEY || ''; 
-const ai = new GoogleGenAI({ apiKey });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const MODEL_NAME = 'gemini-2.5-flash';
 
@@ -14,7 +13,7 @@ export const generateStoreInsight = async (
   chatHistory: ChatMessage[] = []
 ): Promise<string> => {
   
-  if (!apiKey) {
+  if (!process.env.API_KEY) {
     return "Erro de Configuração: API Key do Gemini não encontrada. Por favor, configure `process.env.API_KEY`.";
   }
 
